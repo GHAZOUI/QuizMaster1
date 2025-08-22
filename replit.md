@@ -2,80 +2,122 @@
 
 ## Overview
 
-QuizMaster is a web-based quiz application built with React and Express.js that provides an interactive quiz experience with competitive leaderboards. The application features geography, history, science, arts, and sports questions with character-by-character answer verification. Users can compete globally and filter leaderboards by continent, country, and category. The system includes user profiles with location settings and comprehensive scoring mechanisms.
+QuizMaster est une application de quiz web avec indices de caractères et classement quotidien. L'application propose des questions dans 5 catégories (Géographie, Histoire, Sciences, Arts, Sports) avec vérification caractère par caractère des réponses. Les utilisateurs peuvent concourir dans des classements filtrés par continent, pays et catégorie.
 
-## User Preferences
+## Préférences Utilisateur
 
-Preferred communication style: Simple, everyday language.
+Style de communication préféré : Langage simple et quotidien en français.
 
-## System Architecture
+## Base de Données
 
-### Frontend Architecture
-- **React with TypeScript**: Modern component-based architecture using functional components and hooks
-- **Vite Build System**: Fast development server and optimized production builds with Hot Module Replacement (HMR)
-- **Shadcn/ui Component Library**: Pre-built, accessible UI components with Radix UI primitives
-- **TailwindCSS**: Utility-first CSS framework with custom design tokens and dark mode support
-- **TanStack Query**: Server state management with caching, background updates, and optimistic UI updates
-- **Wouter**: Lightweight client-side routing library for navigation between quiz, leaderboard, and profile pages
+### Architecture de Stockage
+- **Développement** : Stockage en mémoire (MemStorage) pour le prototypage rapide
+- **Production** : PostgreSQL avec Drizzle ORM pour la persistance des données
+- **Configuration** : Base de données Neon Serverless avec pooling de connexions
 
-### Backend Architecture
-- **Express.js Server**: RESTful API with middleware for JSON parsing, request logging, and error handling
-- **TypeScript**: Type-safe server-side development with shared schema definitions
-- **Modular Storage Interface**: Abstracted storage layer with in-memory implementation for development and database implementation for production
-- **Request/Response Logging**: Comprehensive logging middleware for API performance monitoring
+### Schéma de Base de Données
 
-### Database Design
-- **PostgreSQL with Drizzle ORM**: Type-safe database operations with schema-first development
-- **Neon Serverless Database**: Cloud-hosted PostgreSQL with connection pooling
-- **Four Core Tables**:
-  - Users: Authentication, location, and scoring data
-  - Questions: Quiz content with categories, difficulty levels, and hints
-  - Quiz Sessions: Individual quiz attempts with progress tracking
-  - Leaderboard Entries: Competitive scoring with temporal and geographic filtering
+#### Table `users`
+- `id` : UUID (clé primaire)
+- `username` : Nom d'utilisateur unique
+- `email` : Adresse email unique
+- `password` : Mot de passe crypté
+- `continent` : Continent de l'utilisateur
+- `country` : Pays de l'utilisateur
+- `totalScore` : Score total accumulé
+- `quizzesCompleted` : Nombre de quiz terminés
 
-### State Management
-- **Client State**: React hooks for local component state and form management
-- **Server State**: TanStack Query for API data caching and synchronization
-- **Shared Types**: TypeScript schemas shared between client and server for type safety
-- **Form Validation**: Zod schemas for runtime type checking and validation
+#### Table `questions`
+- `id` : UUID (clé primaire)
+- `text` : Texte de la question
+- `answer` : Réponse correcte (en majuscules)
+- `category` : Catégorie (Geography, History, Science, Arts, Sports)
+- `difficulty` : Niveau de difficulté (1-5)
+- `hint` : Indice pour aider l'utilisateur
 
-### Styling and Design System
-- **Design Tokens**: CSS custom properties for consistent theming
-- **Component Variants**: Class Variance Authority for systematic component styling
-- **Responsive Design**: Mobile-first approach with Tailwind breakpoints
-- **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
+#### Table `quiz_sessions`
+- `id` : UUID (clé primaire)
+- `userId` : Référence vers l'utilisateur
+- `score` : Score de la session
+- `correctAnswers` : Nombre de bonnes réponses
+- `totalQuestions` : Nombre total de questions
+- `category` : Catégorie du quiz
+- `completedAt` : Date de completion
+- `isCompleted` : Statut de completion
 
-## External Dependencies
+#### Table `leaderboard_entries`
+- `id` : UUID (clé primaire)
+- `userId` : Référence vers l'utilisateur
+- `score` : Score obtenu
+- `category` : Catégorie du quiz
+- `date` : Date de l'entrée
+- `rank` : Position dans le classement
 
-### Core Framework Dependencies
-- **React 18**: Frontend framework with concurrent features
-- **Express.js**: Node.js web application framework
-- **TypeScript**: Static type checking and enhanced developer experience
-- **Vite**: Build tool with fast HMR and optimized bundling
+### Contenu de la Base de Données
 
-### Database and ORM
-- **Drizzle ORM**: Type-safe database toolkit with PostgreSQL dialect
-- **@neondatabase/serverless**: Serverless PostgreSQL database client
-- **connect-pg-simple**: PostgreSQL session store for Express sessions
+L'application contient actuellement **35 questions** réparties dans 5 catégories :
 
-### UI and Styling
-- **@radix-ui/react-\***: Headless UI primitives for accessible components
-- **TailwindCSS**: Utility-first CSS framework
-- **class-variance-authority**: Component variant management
-- **clsx & tailwind-merge**: Conditional CSS class composition
+- **Géographie** (8 questions) : Capitales, océans, pays, montagnes, déserts
+- **Histoire** (7 questions) : Événements historiques, personnages célèbres, dates importantes
+- **Sciences** (7 questions) : Chimie, physique, biologie, astronomie
+- **Arts** (7 questions) : Peinture, sculpture, musique, littérature
+- **Sports** (6 questions) : Règles sportives, événements olympiques, scores
 
-### State Management and Data Fetching
-- **@tanstack/react-query**: Server state management with caching
-- **@hookform/resolvers**: Form validation with React Hook Form
-- **zod**: Runtime type validation and schema definition
+### Types de Questions
 
-### Development Tools
-- **@replit/vite-plugin-runtime-error-modal**: Development error overlay
-- **@replit/vite-plugin-cartographer**: Replit-specific development enhancements
-- **esbuild**: Fast JavaScript bundler for server-side code
+Chaque question propose :
+- **Indice de caractères** : Affichage du nombre de lettres dans la réponse
+- **Indice contextuel** : Description pour aider l'utilisateur
+- **Vérification caractère par caractère** : Interface visuelle montrant les lettres saisies
+- **Scoring** : 100 points par bonne réponse
 
-### Utility Libraries
-- **date-fns**: Date manipulation and formatting
-- **nanoid**: Unique ID generation
-- **cmdk**: Command palette component
-- **embla-carousel-react**: Carousel/slider functionality
+## Architecture Système
+
+### Frontend (React + TypeScript)
+- **Composants** : Interface mobile-first avec navigation par onglets
+- **Pages** : Quiz, Classement, Profil
+- **État** : TanStack Query pour la gestion des données serveur
+- **Styling** : TailwindCSS avec composants Shadcn/ui
+
+### Backend (Express.js + TypeScript)
+- **API REST** : Routes pour questions, sessions, classements
+- **Validation** : Schémas Zod pour la validation des données
+- **Interface de stockage** : Abstraction permettant de passer du stockage en mémoire à PostgreSQL
+
+### Fonctionnalités Principales
+
+#### Système de Quiz
+- Sélection de catégorie
+- Questions aléatoires par catégorie
+- Affichage des indices de caractères en temps réel
+- Vérification immédiate des réponses
+- Feedback visuel (correct/incorrect)
+- Calcul du score en temps réel
+
+#### Classement
+- Classements quotidiens automatiques
+- Filtres par continent, pays et catégorie
+- Affichage du rang de l'utilisateur
+- Mise à jour en temps réel des positions
+
+#### Profil Utilisateur
+- Statistiques personnelles (score total, quiz complétés)
+- Paramètres de localisation (continent/pays)
+- Préférences de catégories
+- Rang actuel dans les classements
+
+## Modifications Récentes
+
+**22 Août 2025** :
+- Ajout de 30 nouvelles questions (total : 35 questions)
+- Correction des erreurs de validation dans les composants Select
+- Documentation complète de la base de données
+- Extension du contenu dans toutes les catégories (Géographie, Histoire, Sciences, Arts, Sports)
+
+## Technologies Utilisées
+
+- **Frontend** : React 18, TypeScript, Vite, TailwindCSS, Shadcn/ui, TanStack Query
+- **Backend** : Express.js, TypeScript, Drizzle ORM
+- **Base de données** : PostgreSQL (production), Stockage en mémoire (développement)
+- **Cloud** : Neon Serverless Database
+- **Build** : Vite avec Hot Module Replacement

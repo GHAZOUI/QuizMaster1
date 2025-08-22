@@ -33,7 +33,7 @@ export default function LeaderboardFilters({
             <SelectValue placeholder="Select Continent" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Continents</SelectItem>
+            <SelectItem value="all">All Continents</SelectItem>
             {continents.map((continent) => (
               <SelectItem key={continent} value={continent}>
                 {continent}
@@ -47,7 +47,7 @@ export default function LeaderboardFilters({
             <SelectValue placeholder="Select Country" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Countries</SelectItem>
+            <SelectItem value="all">All Countries</SelectItem>
             {countries.map((country) => (
               <SelectItem key={country} value={country}>
                 {country}
@@ -61,7 +61,7 @@ export default function LeaderboardFilters({
             <SelectValue placeholder="Select Category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category} value={category}>
                 {category}

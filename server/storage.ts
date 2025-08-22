@@ -56,6 +56,7 @@ export class MemStorage implements IStorage {
   private seedData() {
     // Seed sample questions
     const sampleQuestions: InsertQuestion[] = [
+      // Geography Questions
       {
         text: "What is the capital city of Australia?",
         answer: "CANBERRA",
@@ -71,12 +72,100 @@ export class MemStorage implements IStorage {
         hint: "This ocean has 7 letters"
       },
       {
-        text: "Who painted the Mona Lisa?",
-        answer: "LEONARDO",
-        category: "Arts",
+        text: "Which country has the most natural lakes?",
+        answer: "CANADA",
+        category: "Geography",
         difficulty: 3,
-        hint: "Famous Renaissance artist, first name has 8 letters"
+        hint: "North American country with 6 letters"
       },
+      {
+        text: "What is the longest river in the world?",
+        answer: "NILE",
+        category: "Geography",
+        difficulty: 2,
+        hint: "African river with 4 letters"
+      },
+      {
+        text: "Which mountain range contains Mount Everest?",
+        answer: "HIMALAYAS",
+        category: "Geography",
+        difficulty: 3,
+        hint: "Asian mountain range with 9 letters"
+      },
+      {
+        text: "What is the smallest country in the world?",
+        answer: "VATICAN",
+        category: "Geography",
+        difficulty: 4,
+        hint: "City-state in Rome with 7 letters"
+      },
+      {
+        text: "Which desert is the largest in the world?",
+        answer: "SAHARA",
+        category: "Geography",
+        difficulty: 2,
+        hint: "African desert with 6 letters"
+      },
+      {
+        text: "What is the capital of Japan?",
+        answer: "TOKYO",
+        category: "Geography",
+        difficulty: 1,
+        hint: "Asian capital with 5 letters"
+      },
+
+      // History Questions
+      {
+        text: "In which year did World War II end?",
+        answer: "1945",
+        category: "History",
+        difficulty: 2,
+        hint: "Four digit year in the 1940s"
+      },
+      {
+        text: "Who was the first person to walk on the moon?",
+        answer: "ARMSTRONG",
+        category: "History",
+        difficulty: 3,
+        hint: "American astronaut, last name has 9 letters"
+      },
+      {
+        text: "Which ancient wonder was located in Alexandria?",
+        answer: "LIGHTHOUSE",
+        category: "History",
+        difficulty: 4,
+        hint: "Maritime structure with 10 letters"
+      },
+      {
+        text: "Who was the last pharaoh of Egypt?",
+        answer: "CLEOPATRA",
+        category: "History",
+        difficulty: 3,
+        hint: "Famous queen with 9 letters"
+      },
+      {
+        text: "In which year did the Berlin Wall fall?",
+        answer: "1989",
+        category: "History",
+        difficulty: 3,
+        hint: "Four digit year in the 1980s"
+      },
+      {
+        text: "Which empire was ruled by Julius Caesar?",
+        answer: "ROMAN",
+        category: "History",
+        difficulty: 2,
+        hint: "Ancient empire with 5 letters"
+      },
+      {
+        text: "Who invented the printing press?",
+        answer: "GUTENBERG",
+        category: "History",
+        difficulty: 4,
+        hint: "German inventor with 9 letters"
+      },
+
+      // Science Questions
       {
         text: "What is the chemical symbol for gold?",
         answer: "AU",
@@ -85,11 +174,148 @@ export class MemStorage implements IStorage {
         hint: "Two letters from Latin name"
       },
       {
-        text: "In which year did World War II end?",
-        answer: "1945",
-        category: "History",
+        text: "What is the hardest natural substance?",
+        answer: "DIAMOND",
+        category: "Science",
         difficulty: 2,
-        hint: "Four digit year in the 1940s"
+        hint: "Precious stone with 7 letters"
+      },
+      {
+        text: "How many bones are in an adult human body?",
+        answer: "206",
+        category: "Science",
+        difficulty: 4,
+        hint: "Three digit number over 200"
+      },
+      {
+        text: "What gas makes up most of Earth's atmosphere?",
+        answer: "NITROGEN",
+        category: "Science",
+        difficulty: 3,
+        hint: "Chemical element with 8 letters"
+      },
+      {
+        text: "Who developed the theory of relativity?",
+        answer: "EINSTEIN",
+        category: "Science",
+        difficulty: 2,
+        hint: "Famous physicist with 8 letters"
+      },
+      {
+        text: "What is the smallest unit of matter?",
+        answer: "ATOM",
+        category: "Science",
+        difficulty: 2,
+        hint: "Basic particle with 4 letters"
+      },
+      {
+        text: "What planet is closest to the Sun?",
+        answer: "MERCURY",
+        category: "Science",
+        difficulty: 2,
+        hint: "Planet named after Roman god with 7 letters"
+      },
+
+      // Arts Questions
+      {
+        text: "Who painted the Mona Lisa?",
+        answer: "LEONARDO",
+        category: "Arts",
+        difficulty: 3,
+        hint: "Famous Renaissance artist, first name has 8 letters"
+      },
+      {
+        text: "Which artist cut off his own ear?",
+        answer: "VANGOGH",
+        category: "Arts",
+        difficulty: 3,
+        hint: "Dutch post-impressionist with 7 letters"
+      },
+      {
+        text: "What is Michelangelo's most famous sculpture?",
+        answer: "DAVID",
+        category: "Arts",
+        difficulty: 2,
+        hint: "Biblical figure with 5 letters"
+      },
+      {
+        text: "Who composed 'The Four Seasons'?",
+        answer: "VIVALDI",
+        category: "Arts",
+        difficulty: 4,
+        hint: "Italian composer with 7 letters"
+      },
+      {
+        text: "Which museum houses the Mona Lisa?",
+        answer: "LOUVRE",
+        category: "Arts",
+        difficulty: 3,
+        hint: "Famous Paris museum with 6 letters"
+      },
+      {
+        text: "Who wrote 'Romeo and Juliet'?",
+        answer: "SHAKESPEARE",
+        category: "Arts",
+        difficulty: 2,
+        hint: "English playwright with 11 letters"
+      },
+      {
+        text: "What instrument did Mozart primarily compose for?",
+        answer: "PIANO",
+        category: "Arts",
+        difficulty: 3,
+        hint: "Keyboard instrument with 5 letters"
+      },
+
+      // Sports Questions
+      {
+        text: "How many players are on a soccer team?",
+        answer: "ELEVEN",
+        category: "Sports",
+        difficulty: 2,
+        hint: "Number spelled out with 6 letters"
+      },
+      {
+        text: "In which sport is a shuttlecock used?",
+        answer: "BADMINTON",
+        category: "Sports",
+        difficulty: 3,
+        hint: "Racket sport with 9 letters"
+      },
+      {
+        text: "What is the maximum score in ten-pin bowling?",
+        answer: "300",
+        category: "Sports",
+        difficulty: 3,
+        hint: "Three digit number"
+      },
+      {
+        text: "Which country hosted the 2016 Summer Olympics?",
+        answer: "BRAZIL",
+        category: "Sports",
+        difficulty: 2,
+        hint: "South American country with 6 letters"
+      },
+      {
+        text: "How many holes are there on a golf course?",
+        answer: "EIGHTEEN",
+        category: "Sports",
+        difficulty: 2,
+        hint: "Number spelled out with 8 letters"
+      },
+      {
+        text: "What does NBA stand for?",
+        answer: "BASKETBALL",
+        category: "Sports",
+        difficulty: 3,
+        hint: "Sport played with orange ball and hoops, 10 letters"
+      },
+      {
+        text: "In tennis, what does 'love' mean?",
+        answer: "ZERO",
+        category: "Sports",
+        difficulty: 3,
+        hint: "Score represented by 4 letters"
       }
     ];
 
