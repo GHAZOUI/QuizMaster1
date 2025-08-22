@@ -29,11 +29,21 @@ export default function QuizPage({ userId }: QuizPageProps) {
 
   const { data: questions, isLoading: questionsLoading } = useQuery({
     queryKey: ['/api/questions/random', selectedCategory, '10'],
+    queryFn: async () => {
+      const response = await fetch(`/api/questions/random?category=${selectedCategory}&limit=10`);
+      if (!response.ok) throw new Error('Failed to fetch questions');
+      return response.json();
+    },
     enabled: !!selectedCategory
   });
 
   const { data: categories } = useQuery({
-    queryKey: ['/api/questions/categories']
+    queryKey: ['/api/questions/categories'],
+    queryFn: async () => {
+      const response = await fetch('/api/questions/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      return response.json();
+    }
   });
 
   const createSessionMutation = useMutation({
@@ -127,7 +137,7 @@ export default function QuizPage({ userId }: QuizPageProps) {
     setCorrectAnswers(0);
     setQuizSession(null);
     setShowResults(false);
-    queryClient.invalidateQueries({ queryKey: ['/api/questions/random'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/questions/random', selectedCategory, '10'] });
   };
 
   const showHint = () => {
