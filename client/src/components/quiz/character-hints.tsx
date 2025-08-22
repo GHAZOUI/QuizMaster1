@@ -4,6 +4,15 @@ interface CharacterHintsProps {
 }
 
 export default function CharacterHints({ answer, userInput }: CharacterHintsProps) {
+  if (!answer) {
+    return (
+      <div className="flex justify-center space-x-2 flex-wrap gap-2" data-testid="character-hints">
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+        ))}
+      </div>
+    );
+  }
   const renderCharacterBox = (index: number) => {
     const userChar = userInput[index]?.toUpperCase() || "";
     const hasInput = index < userInput.length;

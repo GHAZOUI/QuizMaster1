@@ -2,7 +2,7 @@ import { Globe } from "lucide-react";
 import type { Question } from "@shared/schema";
 
 interface QuestionCardProps {
-  question: Question;
+  question: Question | undefined;
 }
 
 export default function QuestionCard({ question }: QuestionCardProps) {
@@ -16,6 +16,20 @@ export default function QuestionCard({ question }: QuestionCardProps) {
     };
     return icons[category] || "❓";
   };
+
+  if (!question) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div className="text-center space-y-4">
+          <div className="animate-pulse">
+            <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full"></div>
+            <div className="h-4 bg-gray-200 rounded mt-4"></div>
+            <div className="h-4 bg-gray-200 rounded mt-2 w-3/4 mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">

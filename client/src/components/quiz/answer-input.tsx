@@ -5,7 +5,7 @@ import { Lightbulb, Check } from "lucide-react";
 import type { Question } from "@shared/schema";
 
 interface AnswerInputProps {
-  question: Question;
+  question: Question | undefined;
   userAnswer: string;
   onAnswerChange: (answer: string) => void;
   onSubmit: () => void;
@@ -27,10 +27,29 @@ export default function AnswerInput({
     }
   };
 
+  if (!question) {
+    return (
+      <div className="space-y-4">
+        <div className="animate-pulse">
+          <div className="flex justify-center space-x-2">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+          <div className="h-12 bg-gray-200 rounded-xl mt-4"></div>
+          <div className="flex space-x-3 mt-4">
+            <div className="flex-1 h-10 bg-gray-200 rounded-lg"></div>
+            <div className="flex-1 h-10 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Character hint display */}
-      <CharacterHints answer={question.answer} userInput={userAnswer} />
+      <CharacterHints answer={question.answer || ""} userInput={userAnswer} />
 
       {/* Text input */}
       <div className="space-y-2">
@@ -45,7 +64,7 @@ export default function AnswerInput({
           data-testid="input-answer"
         />
         <p className="text-xs text-gray-500 text-center" data-testid="text-character-count">
-          {userAnswer.length}/{question.answer.length} characters
+          {userAnswer.length}/{question.answer?.length || 0} characters
         </p>
       </div>
 
