@@ -2,6 +2,14 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertQuizSessionSchema, insertLeaderboardEntrySchema } from "@shared/schema";
+import Stripe from "stripe";
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16",
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -192,6 +200,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } else {
       const allCountries = Object.values(countriesByContinent).flat();
       res.json(allCountries);
+    }
+  });
+
+  // Stripe payment routes for buying coins
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      const { amount } = req.body; // Amount in EUR
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "eur",
+        metadata: {
+          type: "coin_purchase"
+        }
+      });
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ message: "Erreur lors de la création du paiement: " + error.message });
+    }
+  });
+
+  // Add coins to user after successful payment
+  app.post("/api/users/:userId/add-coins", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { coins } = req.body;
+      const user = await storage.updateUserCoins(userId, coins);
+      if (!user) {
+        return res.status(404).json({ message: "Utilisateur non trouvé" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(400).json({ message: "Erreur lors de l'ajout des coins" });
+    }
+  });
+
+  // Use coin to unlock character
+  app.post("/api/users/:userId/unlock-character", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Utilisateur non trouvé" });
+      }
+      if ((user.coins || 0) < 1) {
+        return res.status(400).json({ message: "Pas assez de coins" });
+      }
+      
+      const updatedUser = await storage.updateUserCoins(userId, -1);
+      res.json({ success: true, remainingCoins: updatedUser?.coins || 0 });
+    } catch (error) {
+      res.status(400).json({ message: "Erreur lors du déblocage" });
     }
   });
 

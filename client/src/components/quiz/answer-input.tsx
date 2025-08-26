@@ -11,6 +11,7 @@ interface AnswerInputProps {
   onSubmit: () => void;
   onShowHint: () => void;
   disabled?: boolean;
+  userId: string;
 }
 
 export default function AnswerInput({
@@ -19,7 +20,8 @@ export default function AnswerInput({
   onAnswerChange,
   onSubmit,
   onShowHint,
-  disabled = false
+  disabled = false,
+  userId
 }: AnswerInputProps) {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && userAnswer.trim()) {
@@ -49,7 +51,7 @@ export default function AnswerInput({
   return (
     <div className="space-y-4">
       {/* Character hint display */}
-      <CharacterHints answer={question.answer || ""} userInput={userAnswer} />
+      <CharacterHints answer={question.answer || ""} userInput={userAnswer} userId={userId} />
 
       {/* Text input */}
       <div className="space-y-2">

@@ -197,6 +197,7 @@ export default function QuizPage({ userId }: QuizPageProps) {
         onSubmit={handleSubmitAnswer}
         onShowHint={showHint}
         disabled={answerFeedback.show}
+        userId={userId}
       />
 
       {/* Answer Feedback */}

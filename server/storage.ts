@@ -17,6 +17,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  updateUserCoins(userId: string, coinChange: number): Promise<User | undefined>;
 
   // Question operations
   getQuestionsByCategory(category: string): Promise<Question[]>;
@@ -54,6 +55,20 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
+    // Seed default user
+    const defaultUser: User = {
+      id: "user-1",
+      username: "Alex Dupont",
+      email: "alex.dupont@email.com",
+      password: "hashed_password",
+      continent: "Europe",
+      country: "France",
+      totalScore: 5420,
+      quizzesCompleted: 23,
+      coins: 10
+    };
+    this.users.set(defaultUser.id, defaultUser);
+
     // Seed sample questions
     const sampleQuestions: InsertQuestion[] = [
       // Geography Questions
@@ -344,10 +359,20 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id,
       totalScore: 0,
-      quizzesCompleted: 0
+      quizzesCompleted: 0,
+      coins: 10 // Start with 10 coins
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUserCoins(userId: string, coinChange: number): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, coins: Math.max(0, (user.coins || 0) + coinChange) };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
@@ -373,7 +398,11 @@ export class MemStorage implements IStorage {
 
   async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
     const id = randomUUID();
-    const question: Question = { ...insertQuestion, id };
+    const question: Question = { 
+      ...insertQuestion, 
+      id,
+      hint: insertQuestion.hint || null 
+    };
     this.questions.set(id, question);
     return question;
   }
@@ -384,7 +413,10 @@ export class MemStorage implements IStorage {
       ...insertSession, 
       id,
       completedAt: new Date(),
-      isCompleted: false
+      isCompleted: false,
+      score: insertSession.score || 0,
+      correctAnswers: insertSession.correctAnswers || 0,
+      totalQuestions: insertSession.totalQuestions || 0
     };
     this.quizSessions.set(id, session);
     return session;

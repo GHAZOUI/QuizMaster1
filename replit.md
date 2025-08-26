@@ -108,6 +108,15 @@ Chaque question propose :
 
 ## Modifications Récentes
 
+**26 Août 2025** :
+- **Système de paiement Stripe intégré** : Achat de packs de coins avec interface Stripe sécurisée
+- **Système de déblocage de caractères** : 1 coin = 1 caractère révélé dans les réponses
+- **Interface de coins** : Nouvelle page d'achat avec 4 packs (10, 25, 60, 150 coins)
+- **Boutons de déblocage** : Intégrés dans les indices de caractères avec feedback visuel
+- **Base de données enrichie** : Champ `coins` ajouté au schéma utilisateur
+- **Utilisateur par défaut** : Créé avec 10 coins pour tester le système
+- **Navigation améliorée** : Nouvel onglet "Coins" dans l'interface mobile
+
 **22 Août 2025** :
 - Ajout de 30 nouvelles questions (total : 35 questions)
 - Correction des erreurs de validation dans les composants Select

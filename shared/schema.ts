@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   country: text("country"),
   totalScore: integer("total_score").default(0),
   quizzesCompleted: integer("quizzes_completed").default(0),
+  coins: integer("coins").default(0),
 });
 
 export const questions = pgTable("questions", {
@@ -47,6 +48,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   totalScore: true,
   quizzesCompleted: true,
+  coins: true,
 });
 
 export const insertQuestionSchema = createInsertSchema(questions).omit({

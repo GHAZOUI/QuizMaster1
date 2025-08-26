@@ -4,14 +4,15 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
-import { Brain, User } from "lucide-react";
+import { Brain, User, Coins } from "lucide-react";
 import QuizPage from "@/pages/quiz";
 import LeaderboardPage from "@/pages/leaderboard";
 import ProfilePage from "@/pages/profile";
+import BuyCoinsPage from "@/pages/buy-coins";
 import NotFound from "@/pages/not-found";
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'quiz' | 'leaderboard' | 'profile'>('quiz');
+  const [activeTab, setActiveTab] = useState<'quiz' | 'leaderboard' | 'profile' | 'coins'>('quiz');
   const [currentUser] = useState({
     id: "user-1",
     username: "Alex Dupont",
@@ -30,6 +31,8 @@ function App() {
         return <LeaderboardPage currentUser={currentUser} />;
       case 'profile':
         return <ProfilePage user={currentUser} />;
+      case 'coins':
+        return <BuyCoinsPage userId={currentUser.id} />;
       default:
         return <QuizPage userId={currentUser.id} />;
     }
@@ -90,6 +93,18 @@ function App() {
               >
                 <div className="fas fa-user mb-1 block text-sm">👤</div>
                 Profile
+              </button>
+              <button 
+                className={`flex-1 py-3 px-4 text-center font-medium ${
+                  activeTab === 'coins' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-gray-500'
+                }`}
+                onClick={() => setActiveTab('coins')}
+                data-testid="button-tab-coins"
+              >
+                <Coins className="w-4 h-4 mx-auto mb-1 text-yellow-500" />
+                Coins
               </button>
             </div>
           </nav>
