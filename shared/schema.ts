@@ -28,6 +28,7 @@ export const sessions = pgTable(
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: varchar("username").unique(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -73,9 +74,8 @@ export const leaderboardEntries = pgTable("leaderboard_entries", {
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
-  totalScore: true,
-  quizzesCompleted: true,
-  coins: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertQuestionSchema = createInsertSchema(questions).omit({
@@ -84,12 +84,10 @@ export const insertQuestionSchema = createInsertSchema(questions).omit({
 
 export const insertQuizSessionSchema = createInsertSchema(quizSessions).omit({
   id: true,
-  completedAt: true,
 });
 
 export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntries).omit({
   id: true,
-  date: true,
   rank: true,
 });
 

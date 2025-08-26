@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { User } from "@shared/schema";
 
 interface ProfilePageProps {
-  user: User & { totalScore: number; quizzesCompleted: number };
+  user: User | undefined;
 }
 
 export default function ProfilePage({ user }: ProfilePageProps) {
@@ -23,7 +23,8 @@ export default function ProfilePage({ user }: ProfilePageProps) {
   });
 
   const { data: countries } = useQuery({
-    queryKey: ['/api/countries', user.continent]
+    queryKey: ['/api/countries', user?.continent],
+    enabled: !!user?.continent
   });
 
   const { data: categories } = useQuery({
@@ -31,12 +32,13 @@ export default function ProfilePage({ user }: ProfilePageProps) {
   });
 
   const { data: userRank } = useQuery({
-    queryKey: ['/api/users', user.id, 'rank', 'Geography', new Date().toDateString()],
-    enabled: !!user.id
+    queryKey: ['/api/users', user?.id, 'rank', 'Geography', new Date().toDateString()],
+    enabled: !!user?.id
   });
 
   const updateLocationMutation = useMutation({
     mutationFn: async (locationData: { continent: string; country: string }) => {
+      if (!user?.id) throw new Error('User not found');
       const response = await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -85,18 +87,26 @@ export default function ProfilePage({ user }: ProfilePageProps) {
     return stats[category] || 0;
   };
 
+  if (!user) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-gray-500">User not found</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 space-y-4">
       <UserStats
         user={user}
-        rank={userRank?.rank || 7}
+        rank={(userRank as any)?.rank || 7}
       />
 
       <LocationSettings
         currentContinent={user.continent || ""}
         currentCountry={user.country || ""}
-        continents={continents || []}
-        countries={countries || []}
+        continents={Array.isArray(continents) ? continents : []}
+        countries={Array.isArray(countries) ? countries : []}
         onLocationUpdate={handleLocationUpdate}
         isLoading={updateLocationMutation.isPending}
       />
@@ -109,7 +119,7 @@ export default function ProfilePage({ user }: ProfilePageProps) {
         </h3>
         
         <div className="space-y-2">
-          {categories?.map((category: string) => (
+          {Array.isArray(categories) && categories.map((category: string) => (
             <label key={category} className="flex items-center space-x-3" data-testid={`checkbox-category-${category.toLowerCase()}`}>
               <input
                 type="checkbox"

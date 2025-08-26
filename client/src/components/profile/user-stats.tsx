@@ -2,7 +2,7 @@ import { User } from "lucide-react";
 import type { User as UserType } from "@shared/schema";
 
 interface UserStatsProps {
-  user: UserType & { totalScore: number; quizzesCompleted: number };
+  user: UserType;
   rank: number;
 }
 
@@ -22,13 +22,13 @@ export default function UserStats({ user, rank }: UserStatsProps) {
       <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
         <div className="text-center">
           <p className="text-2xl font-bold text-primary" data-testid="text-total-score">
-            {user.totalScore.toLocaleString()}
+            {(user.totalScore || 0).toLocaleString()}
           </p>
           <p className="text-xs text-gray-500">Total Points</p>
         </div>
         <div className="text-center">
           <p className="text-2xl font-bold text-secondary" data-testid="text-quizzes-completed">
-            {user.quizzesCompleted}
+            {user.quizzesCompleted || 0}
           </p>
           <p className="text-xs text-gray-500">Quizzes</p>
         </div>

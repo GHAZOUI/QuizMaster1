@@ -6,7 +6,7 @@ import { Clock } from "lucide-react";
 import type { User } from "@shared/schema";
 
 interface LeaderboardPageProps {
-  currentUser: User & { totalScore: number; quizzesCompleted: number };
+  currentUser: User | undefined;
 }
 
 export default function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
@@ -88,9 +88,9 @@ export default function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
       <LeaderboardFilters
         filters={filters}
         onFilterChange={handleFilterChange}
-        continents={continents || []}
-        countries={countries || []}
-        categories={categories || []}
+        continents={Array.isArray(continents) ? continents : []}
+        countries={Array.isArray(countries) ? countries : []}
+        categories={Array.isArray(categories) ? categories : []}
       />
 
       {/* Leaderboard Header */}
@@ -107,13 +107,13 @@ export default function LeaderboardPage({ currentUser }: LeaderboardPageProps) {
 
       {/* Leaderboard List */}
       <div className="space-y-2">
-        {leaderboard && leaderboard.length > 0 ? (
+        {Array.isArray(leaderboard) && leaderboard.length > 0 ? (
           leaderboard.map((entry: any, index: number) => (
             <LeaderboardEntry
               key={entry.id}
               entry={entry}
               rank={entry.rank || index + 1}
-              isCurrentUser={entry.userId === currentUser.id}
+              isCurrentUser={entry.userId === currentUser?.id}
               rankIcon={getRankIcon(entry.rank || index + 1)}
               rankColor={getRankColor(entry.rank || index + 1)}
             />

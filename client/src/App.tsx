@@ -37,9 +37,9 @@ function AppContent() {
       case 'quiz':
         return <QuizPage userId={currentUser?.id || ''} />;
       case 'leaderboard':
-        return <LeaderboardPage userId={currentUser?.id || ''} />;
+        return <LeaderboardPage currentUser={currentUser} />;
       case 'profile':
-        return <ProfilePage userId={currentUser?.id || ''} />;
+        return <ProfilePage user={currentUser} />;
       case 'coins':
         return <BuyCoinsPage userId={currentUser?.id || ''} />;
       default:

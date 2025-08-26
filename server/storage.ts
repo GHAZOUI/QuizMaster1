@@ -169,15 +169,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: InsertUser = { 
-      ...insertUser, 
-      id,
-      totalScore: 0,
-      quizzesCompleted: 0,
-      coins: 10
-    };
-    const [newUser] = await db.insert(users).values(user).returning();
+    const [newUser] = await db.insert(users).values(insertUser).returning();
     return newUser;
   }
 
@@ -231,24 +223,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
-    const id = randomUUID();
-    const question: InsertQuestion = { 
-      ...insertQuestion, 
-      id
-    };
-    const [newQuestion] = await db.insert(questions).values(question).returning();
+    const [newQuestion] = await db.insert(questions).values(insertQuestion).returning();
     return newQuestion;
   }
 
   async createQuizSession(insertSession: InsertQuizSession): Promise<QuizSession> {
-    const id = randomUUID();
-    const session: InsertQuizSession = { 
-      ...insertSession, 
-      id,
-      completedAt: new Date(),
-      isCompleted: false
-    };
-    const [newSession] = await db.insert(quizSessions).values(session).returning();
+    const [newSession] = await db.insert(quizSessions).values(insertSession).returning();
     return newSession;
   }
 
@@ -267,14 +247,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createLeaderboardEntry(insertEntry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
-    const id = randomUUID();
-    const entry: InsertLeaderboardEntry = { 
-      ...insertEntry, 
-      id,
-      date: new Date(),
-      rank: 1
-    };
-    const [newEntry] = await db.insert(leaderboardEntries).values(entry).returning();
+    const [newEntry] = await db.insert(leaderboardEntries).values(insertEntry).returning();
     return newEntry;
   }
 
@@ -305,7 +278,7 @@ export class DatabaseStorage implements IStorage {
     if (filters.continent) conditions.push(eq(users.continent, filters.continent));
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      return await query.where(and(...conditions)).orderBy(desc(leaderboardEntries.score)).limit(100);
     }
 
     return await query.orderBy(desc(leaderboardEntries.score)).limit(100);
