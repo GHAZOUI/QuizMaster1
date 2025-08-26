@@ -9,6 +9,9 @@ import {
   type InsertLeaderboardEntry
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { users, questions, quizSessions, leaderboardEntries } from "@shared/schema";
+import { eq, and, desc, count, gte, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -23,6 +26,8 @@ export interface IStorage {
   getQuestionsByCategory(category: string): Promise<Question[]>;
   getRandomQuestions(category: string, limit: number): Promise<Question[]>;
   createQuestion(question: InsertQuestion): Promise<Question>;
+  getQuestionCount(category: string): Promise<number>;
+  fetchMoreQuestions(category: string): Promise<Question[]>;
 
   // Quiz session operations
   createQuizSession(session: InsertQuizSession): Promise<QuizSession>;
@@ -40,426 +45,219 @@ export interface IStorage {
   getUserRank(userId: string, category: string, date?: Date): Promise<number>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private questions: Map<string, Question>;
-  private quizSessions: Map<string, QuizSession>;
-  private leaderboardEntries: Map<string, LeaderboardEntry>;
+// Function to fetch questions from external API
+async function fetchQuestionsFromAPI(category: string, amount: number = 50): Promise<InsertQuestion[]> {
+  try {
+    // Using Open Trivia Database API with different difficulty levels
+    const categoryMap: { [key: string]: number } = {
+      'Geography': 22,
+      'History': 23,
+      'Science': 17,
+      'Arts': 25,
+      'Sports': 21
+    };
+    
+    const categoryId = categoryMap[category] || 9;
+    const difficulties = ['medium', 'hard'];
+    
+    const allQuestions: InsertQuestion[] = [];
+    
+    for (const difficulty of difficulties) {
+      const response = await fetch(
+        `https://opentdb.com/api.php?amount=${Math.ceil(amount/2)}&category=${categoryId}&difficulty=${difficulty}&type=multiple`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        const questions = data.results.map((q: any) => ({
+          text: q.question.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&"),
+          answer: q.correct_answer.toUpperCase().replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&"),
+          category: category,
+          difficulty: difficulty === 'medium' ? 3 : 4,
+          hint: `This answer has ${q.correct_answer.length} characters`
+        }));
+        allQuestions.push(...questions);
+      }
+    }
+    
+    return allQuestions.slice(0, amount);
+  } catch (error) {
+    console.error('Error fetching questions from API:', error);
+    return [];
+  }
+}
 
+export class DatabaseStorage implements IStorage {
   constructor() {
-    this.users = new Map();
-    this.questions = new Map();
-    this.quizSessions = new Map();
-    this.leaderboardEntries = new Map();
     this.seedData();
   }
 
-  private seedData() {
-    // Seed default user
-    const defaultUser: User = {
-      id: "user-1",
-      username: "Alex Dupont",
-      email: "alex.dupont@email.com",
-      password: "hashed_password",
-      continent: "Europe",
-      country: "France",
-      totalScore: 5420,
-      quizzesCompleted: 23,
-      coins: 10
-    };
-    this.users.set(defaultUser.id, defaultUser);
-
-    // Seed sample questions
-    const sampleQuestions: InsertQuestion[] = [
-      // Geography Questions
-      {
-        text: "What is the capital city of Australia?",
-        answer: "CANBERRA",
-        category: "Geography",
-        difficulty: 3,
-        hint: "This city has 8 letters"
-      },
-      {
-        text: "What is the largest ocean on Earth?",
-        answer: "PACIFIC",
-        category: "Geography",
-        difficulty: 2,
-        hint: "This ocean has 7 letters"
-      },
-      {
-        text: "Which country has the most natural lakes?",
-        answer: "CANADA",
-        category: "Geography",
-        difficulty: 3,
-        hint: "North American country with 6 letters"
-      },
-      {
-        text: "What is the longest river in the world?",
-        answer: "NILE",
-        category: "Geography",
-        difficulty: 2,
-        hint: "African river with 4 letters"
-      },
-      {
-        text: "Which mountain range contains Mount Everest?",
-        answer: "HIMALAYAS",
-        category: "Geography",
-        difficulty: 3,
-        hint: "Asian mountain range with 9 letters"
-      },
-      {
-        text: "What is the smallest country in the world?",
-        answer: "VATICAN",
-        category: "Geography",
-        difficulty: 4,
-        hint: "City-state in Rome with 7 letters"
-      },
-      {
-        text: "Which desert is the largest in the world?",
-        answer: "SAHARA",
-        category: "Geography",
-        difficulty: 2,
-        hint: "African desert with 6 letters"
-      },
-      {
-        text: "What is the capital of Japan?",
-        answer: "TOKYO",
-        category: "Geography",
-        difficulty: 1,
-        hint: "Asian capital with 5 letters"
-      },
-
-      // History Questions
-      {
-        text: "In which year did World War II end?",
-        answer: "1945",
-        category: "History",
-        difficulty: 2,
-        hint: "Four digit year in the 1940s"
-      },
-      {
-        text: "Who was the first person to walk on the moon?",
-        answer: "ARMSTRONG",
-        category: "History",
-        difficulty: 3,
-        hint: "American astronaut, last name has 9 letters"
-      },
-      {
-        text: "Which ancient wonder was located in Alexandria?",
-        answer: "LIGHTHOUSE",
-        category: "History",
-        difficulty: 4,
-        hint: "Maritime structure with 10 letters"
-      },
-      {
-        text: "Who was the last pharaoh of Egypt?",
-        answer: "CLEOPATRA",
-        category: "History",
-        difficulty: 3,
-        hint: "Famous queen with 9 letters"
-      },
-      {
-        text: "In which year did the Berlin Wall fall?",
-        answer: "1989",
-        category: "History",
-        difficulty: 3,
-        hint: "Four digit year in the 1980s"
-      },
-      {
-        text: "Which empire was ruled by Julius Caesar?",
-        answer: "ROMAN",
-        category: "History",
-        difficulty: 2,
-        hint: "Ancient empire with 5 letters"
-      },
-      {
-        text: "Who invented the printing press?",
-        answer: "GUTENBERG",
-        category: "History",
-        difficulty: 4,
-        hint: "German inventor with 9 letters"
-      },
-
-      // Science Questions
-      {
-        text: "What is the chemical symbol for gold?",
-        answer: "AU",
-        category: "Science",
-        difficulty: 2,
-        hint: "Two letters from Latin name"
-      },
-      {
-        text: "What is the hardest natural substance?",
-        answer: "DIAMOND",
-        category: "Science",
-        difficulty: 2,
-        hint: "Precious stone with 7 letters"
-      },
-      {
-        text: "How many bones are in an adult human body?",
-        answer: "206",
-        category: "Science",
-        difficulty: 4,
-        hint: "Three digit number over 200"
-      },
-      {
-        text: "What gas makes up most of Earth's atmosphere?",
-        answer: "NITROGEN",
-        category: "Science",
-        difficulty: 3,
-        hint: "Chemical element with 8 letters"
-      },
-      {
-        text: "Who developed the theory of relativity?",
-        answer: "EINSTEIN",
-        category: "Science",
-        difficulty: 2,
-        hint: "Famous physicist with 8 letters"
-      },
-      {
-        text: "What is the smallest unit of matter?",
-        answer: "ATOM",
-        category: "Science",
-        difficulty: 2,
-        hint: "Basic particle with 4 letters"
-      },
-      {
-        text: "What planet is closest to the Sun?",
-        answer: "MERCURY",
-        category: "Science",
-        difficulty: 2,
-        hint: "Planet named after Roman god with 7 letters"
-      },
-
-      // Arts Questions
-      {
-        text: "Who painted the Mona Lisa?",
-        answer: "LEONARDO",
-        category: "Arts",
-        difficulty: 3,
-        hint: "Famous Renaissance artist, first name has 8 letters"
-      },
-      {
-        text: "Which artist cut off his own ear?",
-        answer: "VANGOGH",
-        category: "Arts",
-        difficulty: 3,
-        hint: "Dutch post-impressionist with 7 letters"
-      },
-      {
-        text: "What is Michelangelo's most famous sculpture?",
-        answer: "DAVID",
-        category: "Arts",
-        difficulty: 2,
-        hint: "Biblical figure with 5 letters"
-      },
-      {
-        text: "Who composed 'The Four Seasons'?",
-        answer: "VIVALDI",
-        category: "Arts",
-        difficulty: 4,
-        hint: "Italian composer with 7 letters"
-      },
-      {
-        text: "Which museum houses the Mona Lisa?",
-        answer: "LOUVRE",
-        category: "Arts",
-        difficulty: 3,
-        hint: "Famous Paris museum with 6 letters"
-      },
-      {
-        text: "Who wrote 'Romeo and Juliet'?",
-        answer: "SHAKESPEARE",
-        category: "Arts",
-        difficulty: 2,
-        hint: "English playwright with 11 letters"
-      },
-      {
-        text: "What instrument did Mozart primarily compose for?",
-        answer: "PIANO",
-        category: "Arts",
-        difficulty: 3,
-        hint: "Keyboard instrument with 5 letters"
-      },
-
-      // Sports Questions
-      {
-        text: "How many players are on a soccer team?",
-        answer: "ELEVEN",
-        category: "Sports",
-        difficulty: 2,
-        hint: "Number spelled out with 6 letters"
-      },
-      {
-        text: "In which sport is a shuttlecock used?",
-        answer: "BADMINTON",
-        category: "Sports",
-        difficulty: 3,
-        hint: "Racket sport with 9 letters"
-      },
-      {
-        text: "What is the maximum score in ten-pin bowling?",
-        answer: "300",
-        category: "Sports",
-        difficulty: 3,
-        hint: "Three digit number"
-      },
-      {
-        text: "Which country hosted the 2016 Summer Olympics?",
-        answer: "BRAZIL",
-        category: "Sports",
-        difficulty: 2,
-        hint: "South American country with 6 letters"
-      },
-      {
-        text: "How many holes are there on a golf course?",
-        answer: "EIGHTEEN",
-        category: "Sports",
-        difficulty: 2,
-        hint: "Number spelled out with 8 letters"
-      },
-      {
-        text: "What does NBA stand for?",
-        answer: "BASKETBALL",
-        category: "Sports",
-        difficulty: 3,
-        hint: "Sport played with orange ball and hoops, 10 letters"
-      },
-      {
-        text: "In tennis, what does 'love' mean?",
-        answer: "ZERO",
-        category: "Sports",
-        difficulty: 3,
-        hint: "Score represented by 4 letters"
+  private async seedData() {
+    try {
+      // Check if default user exists
+      const existingUser = await db.select().from(users).where(eq(users.id, "user-1")).limit(1);
+      
+      if (existingUser.length === 0) {
+        const defaultUser: InsertUser = {
+          id: "user-1",
+          username: "Alex Dupont",
+          email: "alex.dupont@email.com",
+          password: "hashed_password",
+          continent: "Europe",
+          country: "France",
+          totalScore: 5420,
+          quizzesCompleted: 23,
+          coins: 8
+        };
+        await db.insert(users).values(defaultUser);
       }
-    ];
 
-    sampleQuestions.forEach(q => this.createQuestion(q));
+      // Check if we need to seed initial questions for each category
+      const categories = ['Geography', 'History', 'Science', 'Arts', 'Sports'];
+      
+      for (const category of categories) {
+        const existingQuestions = await db.select({ count: count() })
+          .from(questions)
+          .where(eq(questions.category, category));
+        
+        if (existingQuestions[0].count < 10) {
+          // Fetch and seed initial questions from API
+          const newQuestions = await fetchQuestionsFromAPI(category, 50);
+          if (newQuestions.length > 0) {
+            const questionsWithIds = newQuestions.map(q => ({ ...q, id: randomUUID() }));
+            await db.insert(questions).values(questionsWithIds);
+            console.log(`Seeded ${questionsWithIds.length} questions for ${category}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error seeding data:', error);
+    }
   }
 
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { 
+    const user: InsertUser = { 
       ...insertUser, 
       id,
       totalScore: 0,
       quizzesCompleted: 0,
-      coins: 10 // Start with 10 coins
+      coins: 10
     };
-    this.users.set(id, user);
-    return user;
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
   }
 
   async updateUserCoins(userId: string, coinChange: number): Promise<User | undefined> {
-    const user = this.users.get(userId);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, coins: Math.max(0, (user.coins || 0) + coinChange) };
-    this.users.set(userId, updatedUser);
-    return updatedUser;
+    const [updatedUser] = await db
+      .update(users)
+      .set({ coins: sql`GREATEST(0, ${users.coins} + ${coinChange})` })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser || undefined;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser = { ...user, ...updates };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+    const [updatedUser] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
   }
 
   async getQuestionsByCategory(category: string): Promise<Question[]> {
-    return Array.from(this.questions.values()).filter(
-      q => q.category === category
-    );
+    return await db.select().from(questions).where(eq(questions.category, category));
   }
 
   async getRandomQuestions(category: string, limit: number): Promise<Question[]> {
-    const categoryQuestions = await this.getQuestionsByCategory(category);
-    const shuffled = categoryQuestions.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, limit);
+    return await db
+      .select()
+      .from(questions)
+      .where(eq(questions.category, category))
+      .orderBy(sql`RANDOM()`)
+      .limit(limit);
+  }
+
+  async getQuestionCount(category: string): Promise<number> {
+    const result = await db.select({ count: count() })
+      .from(questions)
+      .where(eq(questions.category, category));
+    return result[0].count;
+  }
+
+  async fetchMoreQuestions(category: string): Promise<Question[]> {
+    // Fetch more questions from external API
+    const newQuestions = await fetchQuestionsFromAPI(category, 50);
+    if (newQuestions.length > 0) {
+      const questionsWithIds = newQuestions.map(q => ({ ...q, id: randomUUID() }));
+      const insertedQuestions = await db.insert(questions).values(questionsWithIds).returning();
+      return insertedQuestions;
+    }
+    return [];
   }
 
   async createQuestion(insertQuestion: InsertQuestion): Promise<Question> {
     const id = randomUUID();
-    const question: Question = { 
+    const question: InsertQuestion = { 
       ...insertQuestion, 
-      id,
-      hint: insertQuestion.hint || null 
+      id
     };
-    this.questions.set(id, question);
-    return question;
+    const [newQuestion] = await db.insert(questions).values(question).returning();
+    return newQuestion;
   }
 
   async createQuizSession(insertSession: InsertQuizSession): Promise<QuizSession> {
     const id = randomUUID();
-    const session: QuizSession = { 
+    const session: InsertQuizSession = { 
       ...insertSession, 
       id,
       completedAt: new Date(),
-      isCompleted: false,
-      score: insertSession.score || 0,
-      correctAnswers: insertSession.correctAnswers || 0,
-      totalQuestions: insertSession.totalQuestions || 0
+      isCompleted: false
     };
-    this.quizSessions.set(id, session);
-    return session;
+    const [newSession] = await db.insert(quizSessions).values(session).returning();
+    return newSession;
   }
 
   async updateQuizSession(id: string, updates: Partial<QuizSession>): Promise<QuizSession | undefined> {
-    const session = this.quizSessions.get(id);
-    if (!session) return undefined;
-    
-    const updatedSession = { ...session, ...updates };
-    this.quizSessions.set(id, updatedSession);
-    return updatedSession;
+    const [updatedSession] = await db
+      .update(quizSessions)
+      .set(updates)
+      .where(eq(quizSessions.id, id))
+      .returning();
+    return updatedSession || undefined;
   }
 
   async getQuizSession(id: string): Promise<QuizSession | undefined> {
-    return this.quizSessions.get(id);
+    const [session] = await db.select().from(quizSessions).where(eq(quizSessions.id, id));
+    return session || undefined;
   }
 
   async createLeaderboardEntry(insertEntry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
     const id = randomUUID();
-    const entry: LeaderboardEntry = { 
+    const entry: InsertLeaderboardEntry = { 
       ...insertEntry, 
       id,
       date: new Date(),
-      rank: 0
+      rank: 1
     };
-    this.leaderboardEntries.set(id, entry);
-    
-    // Recalculate ranks for this category
-    await this.recalculateRanks(insertEntry.category);
-    
-    return this.leaderboardEntries.get(id)!;
-  }
-
-  private async recalculateRanks(category: string): Promise<void> {
-    const entries = Array.from(this.leaderboardEntries.values())
-      .filter(e => e.category === category)
-      .sort((a, b) => b.score - a.score);
-    
-    entries.forEach((entry, index) => {
-      entry.rank = index + 1;
-      this.leaderboardEntries.set(entry.id, entry);
-    });
+    const [newEntry] = await db.insert(leaderboardEntries).values(entry).returning();
+    return newEntry;
   }
 
   async getLeaderboard(filters: {
@@ -468,39 +266,48 @@ export class MemStorage implements IStorage {
     continent?: string;
     date?: Date;
   }): Promise<LeaderboardEntry[]> {
-    let entries = Array.from(this.leaderboardEntries.values());
-    
-    if (filters.category) {
-      entries = entries.filter(e => e.category === filters.category);
+    let query = db
+      .select({
+        id: leaderboardEntries.id,
+        userId: leaderboardEntries.userId,
+        score: leaderboardEntries.score,
+        category: leaderboardEntries.category,
+        date: leaderboardEntries.date,
+        rank: leaderboardEntries.rank,
+        username: users.username,
+        country: users.country,
+        continent: users.continent
+      })
+      .from(leaderboardEntries)
+      .innerJoin(users, eq(leaderboardEntries.userId, users.id));
+
+    const conditions = [];
+    if (filters.category) conditions.push(eq(leaderboardEntries.category, filters.category));
+    if (filters.country) conditions.push(eq(users.country, filters.country));
+    if (filters.continent) conditions.push(eq(users.continent, filters.continent));
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
     }
-    
-    if (filters.date) {
-      const targetDate = filters.date.toDateString();
-      entries = entries.filter(e => e.date?.toDateString() === targetDate);
-    }
-    
-    if (filters.country || filters.continent) {
-      const users = Array.from(this.users.values());
-      entries = entries.filter(entry => {
-        const user = users.find(u => u.id === entry.userId);
-        if (!user) return false;
-        
-        if (filters.country && user.country !== filters.country) return false;
-        if (filters.continent && user.continent !== filters.continent) return false;
-        
-        return true;
-      });
-    }
-    
-    return entries.sort((a, b) => (a.rank || 0) - (b.rank || 0));
+
+    return await query.orderBy(desc(leaderboardEntries.score)).limit(100);
   }
 
   async getUserRank(userId: string, category: string, date?: Date): Promise<number> {
-    const filters = { category, date };
-    const leaderboard = await this.getLeaderboard(filters);
-    const entry = leaderboard.find(e => e.userId === userId);
-    return entry?.rank || 0;
+    const result = await db
+      .select({ count: count() })
+      .from(leaderboardEntries)
+      .where(
+        and(
+          eq(leaderboardEntries.category, category),
+          gte(leaderboardEntries.score, 
+            sql`(SELECT score FROM ${leaderboardEntries} WHERE ${leaderboardEntries.userId} = ${userId} AND ${leaderboardEntries.category} = ${category} LIMIT 1)`
+          )
+        )
+      );
+    
+    return result[0].count + 1;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

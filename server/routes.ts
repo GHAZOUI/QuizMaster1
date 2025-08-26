@@ -8,7 +8,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-07-30.basil",
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -49,9 +49,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/questions/random", async (req, res) => {
     const { category = "Geography", limit = "10" } = req.query;
     try {
-      const questions = await storage.getRandomQuestions(category as string, parseInt(limit as string));
+      // Check if we have enough questions, fetch more if needed
+      const questionCount = await storage.getQuestionCount(category as string);
+      const requestedLimit = parseInt(limit as string);
+      
+      // If user is approaching the limit (40+ questions used), fetch more
+      if (questionCount < requestedLimit + 40) {
+        console.log(`Fetching more questions for ${category}, current count: ${questionCount}`);
+        await storage.fetchMoreQuestions(category as string);
+      }
+      
+      const questions = await storage.getRandomQuestions(category as string, requestedLimit);
       res.json(questions);
     } catch (error) {
+      console.error("Error getting questions:", error);
       res.status(400).json({ message: "Error fetching questions" });
     }
   });
@@ -102,10 +113,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user stats
       const user = await storage.getUser(session.userId);
       if (user) {
+        const newQuizzesCompleted = (user.quizzesCompleted || 0) + 1;
+        
         await storage.updateUser(user.id, {
           totalScore: (user.totalScore || 0) + score,
-          quizzesCompleted: (user.quizzesCompleted || 0) + 1
+          quizzesCompleted: newQuizzesCompleted
         });
+
+        // Check if user reached 40 questions in this category - fetch more if needed
+        if (newQuizzesCompleted >= 40 && newQuizzesCompleted % 40 === 0) {
+          console.log(`User ${user.username} reached ${newQuizzesCompleted} quizzes! Fetching more ${session.category} questions.`);
+          await storage.fetchMoreQuestions(session.category);
+        }
 
         // Create leaderboard entry
         await storage.createLeaderboardEntry({
@@ -117,6 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(session);
     } catch (error) {
+      console.error("Error completing quiz:", error);
       res.status(400).json({ message: "Error completing quiz" });
     }
   });

@@ -11,9 +11,10 @@ Style de communication préféré : Langage simple et quotidien en français.
 ## Base de Données
 
 ### Architecture de Stockage
-- **Développement** : Stockage en mémoire (MemStorage) pour le prototypage rapide
-- **Production** : PostgreSQL avec Drizzle ORM pour la persistance des données
+- **Base de données** : PostgreSQL avec Drizzle ORM (migration complète effectuée)
 - **Configuration** : Base de données Neon Serverless avec pooling de connexions
+- **Questions dynamiques** : Récupération automatique depuis Open Trivia Database API
+- **Logique intelligente** : Fetch automatique de 50 nouvelles questions quand l'utilisateur arrive à 40 questions par catégorie
 
 ### Schéma de Base de Données
 
@@ -55,13 +56,14 @@ Style de communication préféré : Langage simple et quotidien en français.
 
 ### Contenu de la Base de Données
 
-L'application contient actuellement **35 questions** réparties dans 5 catégories :
+L'application utilise un **système de questions dynamiques** :
 
-- **Géographie** (8 questions) : Capitales, océans, pays, montagnes, déserts
-- **Histoire** (7 questions) : Événements historiques, personnages célèbres, dates importantes
-- **Sciences** (7 questions) : Chimie, physique, biologie, astronomie
-- **Arts** (7 questions) : Peinture, sculpture, musique, littérature
-- **Sports** (6 questions) : Règles sportives, événements olympiques, scores
+- **Source initiale** : 50 questions par catégorie depuis Open Trivia Database API
+- **Rechargement automatique** : Récupération de 50 nouvelles questions quand besoin
+- **5 catégories** : Geography, History, Science, Arts, Sports
+- **Niveaux de difficulté** : Medium (3) et Hard (4)
+- **Déclencheur** : Fetch automatique quand moins de 50 questions disponibles
+- **API externe** : https://opentdb.com/api.php avec mapping des catégories
 
 ### Types de Questions
 
@@ -108,7 +110,16 @@ Chaque question propose :
 
 ## Modifications Récentes
 
-**26 Août 2025** :
+**26 Août 2025 (Soir) - Migration Base de Données & Questions Dynamiques** :
+- **Migration PostgreSQL complète** : Remplacement du stockage en mémoire par vraie BDD
+- **API externe intégrée** : Récupération automatique de questions depuis Open Trivia Database
+- **Système intelligent** : Fetch automatique de 50 nouvelles questions par catégorie 
+- **Logique de déclenchement** : Quand l'utilisateur atteint 40 questions, recharge automatique
+- **Mapping des catégories** : Geography(22), History(23), Science(17), Arts(25), Sports(21)
+- **Questions à difficultés variables** : Medium et Hard mélangées automatiquement
+- **Seed automatique** : 50 questions par catégorie au premier lancement
+
+**26 Août 2025 (Matin) - Système de Paiement** :
 - **Système de paiement Stripe intégré** : Achat de packs de coins avec interface Stripe sécurisée
 - **Système de déblocage de caractères** : 1 coin = 1 caractère révélé dans les réponses
 - **Interface de coins** : Nouvelle page d'achat avec 4 packs (10, 25, 60, 150 coins)
