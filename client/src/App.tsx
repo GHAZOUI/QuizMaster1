@@ -5,43 +5,50 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
 import { Brain, User, Coins } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import QuizPage from "@/pages/quiz";
 import LeaderboardPage from "@/pages/leaderboard";
 import ProfilePage from "@/pages/profile";
 import BuyCoinsPage from "@/pages/buy-coins";
 import NotFound from "@/pages/not-found";
 
-function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState<'quiz' | 'leaderboard' | 'profile' | 'coins'>('quiz');
-  const [currentUser] = useState({
-    id: "user-1",
-    username: "Alex Dupont",
-    email: "alex.dupont@email.com",
-    totalScore: 5420,
-    quizzesCompleted: 23,
-    country: "France",
-    continent: "Europe"
+  const userId = "user-1";
+  
+  const { data: currentUser, isLoading } = useQuery({
+    queryKey: ['/api/users', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      if (!response.ok) throw new Error('User not found');
+      return response.json();
+    }
   });
+
+  if (isLoading || !currentUser) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
+      </div>
+    );
+  }
 
   const renderScreen = () => {
     switch (activeTab) {
       case 'quiz':
-        return <QuizPage userId={currentUser.id} />;
+        return <QuizPage userId={userId} />;
       case 'leaderboard':
         return <LeaderboardPage currentUser={currentUser} />;
       case 'profile':
         return <ProfilePage user={currentUser} />;
       case 'coins':
-        return <BuyCoinsPage userId={currentUser.id} />;
+        return <BuyCoinsPage userId={userId} />;
       default:
-        return <QuizPage userId={currentUser.id} />;
+        return <QuizPage userId={userId} />;
     }
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
         <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
           {/* Header */}
           <header className="bg-primary text-white p-4 flex items-center justify-between">
@@ -49,9 +56,17 @@ function App() {
               <Brain className="text-2xl w-8 h-8" data-testid="icon-brain" />
               <h1 className="text-xl font-bold" data-testid="text-app-title">QuizMaster</h1>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm" data-testid="text-user-score">{currentUser.totalScore.toLocaleString()} pts</span>
-              <User className="text-xl w-6 h-6" data-testid="icon-user" />
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1">
+                <Coins className="w-4 h-4 text-yellow-500" />
+                <span className="text-sm font-medium text-yellow-600" data-testid="text-user-coins">
+                  {currentUser.coins || 0}
+                </span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="text-sm" data-testid="text-user-score">{currentUser.totalScore.toLocaleString()} pts</span>
+                <User className="w-5 h-5" data-testid="icon-user" />
+              </div>
             </div>
           </header>
 
@@ -112,6 +127,15 @@ function App() {
           {/* Screen Content */}
           {renderScreen()}
         </div>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <AppContent />
       </TooltipProvider>
     </QueryClientProvider>
   );

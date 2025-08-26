@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Coins, Lock, Unlock } from 'lucide-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Unlock, Coins } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
 interface CharacterUnlockButtonProps {
@@ -11,23 +11,15 @@ interface CharacterUnlockButtonProps {
   onCharacterUnlocked: (index: number, character: string) => void;
 }
 
-export default function CharacterUnlockButton({ 
-  userId, 
-  characterIndex, 
-  answer, 
-  onCharacterUnlocked 
+export default function CharacterUnlockButton({
+  userId,
+  characterIndex,
+  answer,
+  onCharacterUnlocked
 }: CharacterUnlockButtonProps) {
+  const [isUnlocking, setIsUnlocking] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const { data: user } = useQuery({
-    queryKey: ['/api/users', userId],
-    queryFn: async () => {
-      const response = await fetch(`/api/users/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch user');
-      return response.json();
-    }
-  });
 
   const unlockCharacterMutation = useMutation({
     mutationFn: async () => {
@@ -37,64 +29,50 @@ export default function CharacterUnlockButton({
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message);
+        throw new Error(error.message || 'Erreur lors du déblocage');
       }
       return response.json();
     },
     onSuccess: (data) => {
-      const character = answer[characterIndex];
+      const character = answer[characterIndex]?.toUpperCase() || '';
       onCharacterUnlocked(characterIndex, character);
       queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
       toast({
         title: "Caractère débloqué !",
-        description: `Lettre "${character}" révélée. Coins restants : ${data.remainingCoins}`
+        description: `Lettre "${character}" révélée. Il vous reste ${data.remainingCoins} coins.`,
       });
+      setIsUnlocking(false);
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Erreur",
-        description: error.message || "Impossible de débloquer le caractère",
-        variant: "destructive"
+        description: error.message,
+        variant: "destructive",
       });
+      setIsUnlocking(false);
     }
   });
 
   const handleUnlock = () => {
-    if (!user || (user.coins || 0) < 1) {
-      toast({
-        title: "Pas assez de coins",
-        description: "Vous avez besoin d'au moins 1 coin pour débloquer un caractère",
-        variant: "destructive"
-      });
-      return;
-    }
+    setIsUnlocking(true);
     unlockCharacterMutation.mutate();
   };
-
-  const userCoins = user?.coins || 0;
-  const canUnlock = userCoins >= 1;
 
   return (
     <Button
       size="sm"
-      variant={canUnlock ? "default" : "secondary"}
+      variant="outline"
+      className="h-6 w-6 p-0 border-yellow-300 hover:bg-yellow-50 text-yellow-600"
       onClick={handleUnlock}
-      disabled={!canUnlock || unlockCharacterMutation.isPending}
-      className="h-8 px-2"
-      data-testid={`button-unlock-character-${characterIndex}`}
+      disabled={isUnlocking || unlockCharacterMutation.isPending}
+      data-testid={`button-unlock-${characterIndex}`}
     >
-      {unlockCharacterMutation.isPending ? (
-        <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
-      ) : canUnlock ? (
-        <>
-          <Unlock className="w-3 h-3 mr-1" />
-          <Coins className="w-3 h-3 mr-1 text-yellow-500" />
-          1
-        </>
+      {isUnlocking || unlockCharacterMutation.isPending ? (
+        <div className="w-3 h-3 border border-yellow-400 border-t-transparent rounded-full animate-spin" />
       ) : (
         <>
-          <Lock className="w-3 h-3 mr-1" />
-          <span className="text-xs">Pas de coins</span>
+          <Unlock className="w-3 h-3" />
+          <Coins className="w-2 h-2 -ml-1" />
         </>
       )}
     </Button>

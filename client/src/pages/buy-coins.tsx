@@ -65,11 +65,9 @@ const CheckoutForm = ({ selectedPackage, userId }: { selectedPackage: CoinPackag
       return;
     }
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: {
-        return_url: window.location.origin,
-      },
+      redirect: "if_required"
     });
 
     if (error) {
@@ -78,9 +76,13 @@ const CheckoutForm = ({ selectedPackage, userId }: { selectedPackage: CoinPackag
         description: error.message,
         variant: "destructive",
       });
-    } else {
+    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
       // Payment successful - add coins to user account
       addCoinsMutation.mutate(selectedPackage.coins + (selectedPackage.bonus || 0));
+      toast({
+        title: "Paiement réussi !",
+        description: `${selectedPackage.coins}${selectedPackage.bonus ? ` (+${selectedPackage.bonus} bonus)` : ''} coins ajoutés !`,
+      });
     }
   };
 
