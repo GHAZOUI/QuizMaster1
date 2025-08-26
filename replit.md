@@ -110,6 +110,15 @@ Chaque question propose :
 
 ## Modifications Récentes
 
+**26 Août 2025 (Nuit) - Authentification Replit Intégrée** :
+- **Système d'authentification Replit complet** : Utilisateurs connectés via OpenID Connect 
+- **Pages dédiées** : Landing page pour visiteurs, interface authentifiée pour utilisateurs connectés
+- **Gestion de session** : Sessions PostgreSQL sécurisées avec connect-pg-simple
+- **Redirection intelligente** : Landing page → Login Replit → Interface quiz complète
+- **Intégration utilisateur** : Profile Replit (nom, email, avatar) synchronisé avec données quiz
+- **Protection des routes** : Middleware d'authentification sur routes sensibles
+- **Interface adaptée** : useAuth hook pour gestion état utilisateur côté client
+
 **26 Août 2025 (Soir) - Migration Base de Données & Questions Dynamiques** :
 - **Migration PostgreSQL complète** : Remplacement du stockage en mémoire par vraie BDD
 - **API externe intégrée** : Récupération automatique de questions depuis Open Trivia Database

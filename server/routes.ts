@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertQuizSessionSchema, insertLeaderboardEntrySchema } from "@shared/schema";
 import Stripe from "stripe";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
