@@ -6,26 +6,20 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
 import { Brain, User, Coins } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import QuizPage from "@/pages/quiz";
 import LeaderboardPage from "@/pages/leaderboard";
 import ProfilePage from "@/pages/profile";
 import BuyCoinsPage from "@/pages/buy-coins";
+import Landing from "@/pages/landing";
+import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
+  const { user: currentUser, isLoading, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<'quiz' | 'leaderboard' | 'profile' | 'coins'>('quiz');
-  const userId = "user-1";
   
-  const { data: currentUser, isLoading } = useQuery({
-    queryKey: ['/api/users', userId],
-    queryFn: async () => {
-      const response = await fetch(`/api/users/${userId}`);
-      if (!response.ok) throw new Error('User not found');
-      return response.json();
-    }
-  });
-
-  if (isLoading || !currentUser) {
+  if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
@@ -33,18 +27,23 @@ function AppContent() {
     );
   }
 
+  // Show landing page for non-authenticated users
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
   const renderScreen = () => {
     switch (activeTab) {
       case 'quiz':
-        return <QuizPage userId={userId} />;
+        return <QuizPage userId={currentUser?.id || ''} />;
       case 'leaderboard':
-        return <LeaderboardPage currentUser={currentUser} />;
+        return <LeaderboardPage userId={currentUser?.id || ''} />;
       case 'profile':
-        return <ProfilePage user={currentUser} />;
+        return <ProfilePage userId={currentUser?.id || ''} />;
       case 'coins':
-        return <BuyCoinsPage userId={userId} />;
+        return <BuyCoinsPage userId={currentUser?.id || ''} />;
       default:
-        return <QuizPage userId={userId} />;
+        return <QuizPage userId={currentUser?.id || ''} />;
     }
   };
 
@@ -60,11 +59,11 @@ function AppContent() {
               <div className="flex items-center space-x-1">
                 <Coins className="w-4 h-4 text-yellow-500" />
                 <span className="text-sm font-medium text-yellow-600" data-testid="text-user-coins">
-                  {currentUser.coins || 0}
+                  {currentUser?.coins || 0}
                 </span>
               </div>
               <div className="flex items-center space-x-1">
-                <span className="text-sm" data-testid="text-user-score">{currentUser.totalScore.toLocaleString()} pts</span>
+                <span className="text-sm" data-testid="text-user-score">{(currentUser?.totalScore || 0).toLocaleString()} pts</span>
                 <User className="w-5 h-5" data-testid="icon-user" />
               </div>
             </div>

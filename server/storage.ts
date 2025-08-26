@@ -1,6 +1,7 @@
 import { 
   type User, 
-  type InsertUser, 
+  type InsertUser,
+  type UpsertUser,
   type Question, 
   type InsertQuestion,
   type QuizSession,
@@ -15,7 +16,9 @@ import { eq, and, desc, count, gte, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
@@ -98,11 +101,11 @@ export class DatabaseStorage implements IStorage {
       const existingUser = await db.select().from(users).where(eq(users.id, "user-1")).limit(1);
       
       if (existingUser.length === 0) {
-        const defaultUser: InsertUser = {
+        const defaultUser: UpsertUser = {
           id: "user-1",
-          username: "Alex Dupont",
           email: "alex.dupont@email.com",
-          password: "hashed_password",
+          firstName: "Alex",
+          lastName: "Dupont",
           continent: "Europe",
           country: "France",
           totalScore: 5420,
@@ -138,6 +141,21 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
