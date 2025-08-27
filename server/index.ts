@@ -47,6 +47,14 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Serve static web interface for preview
+  app.use(express.static('client'));
+  
+  // Redirect root to web interface
+  app.get('/', (req, res) => {
+    res.sendFile('index.html', { root: './client' });
+  });
+
   // Production mode configuration
   const port = parseInt(process.env.PORT || '5000', 10);
   const isProduction = process.env.NODE_ENV === 'production';

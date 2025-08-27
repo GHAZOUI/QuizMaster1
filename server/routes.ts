@@ -13,6 +13,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for web preview
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      service: 'QuizMaster API',
+      version: '1.0.0'
+    });
+  });
+
   // Auth middleware
   await setupAuth(app);
 
