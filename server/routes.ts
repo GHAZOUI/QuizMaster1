@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertQuizSessionSchema, insertLeaderboardEntrySchema } from "../shared/schema";
+import { insertUserSchema, insertQuizSessionSchema, insertLeaderboardEntrySchema } from "@shared/schema";
 import Stripe from "stripe";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 
@@ -9,20 +9,10 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-08-27.basil",
+  apiVersion: "2025-07-30.basil",
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoint for web preview
-  app.get('/api/health', (req, res) => {
-    res.json({ 
-      status: 'OK', 
-      timestamp: new Date().toISOString(),
-      service: 'QuizMaster API',
-      version: '1.0.0'
-    });
-  });
-
   // Auth middleware
   await setupAuth(app);
 

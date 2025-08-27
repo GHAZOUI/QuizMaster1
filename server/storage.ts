@@ -8,10 +8,10 @@ import {
   type InsertQuizSession,
   type LeaderboardEntry,
   type InsertLeaderboardEntry
-} from "../shared/schema";
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, questions, quizSessions, leaderboardEntries } from "../shared/schema";
+import { users, questions, quizSessions, leaderboardEntries } from "@shared/schema";
 import { eq, and, desc, count, gte, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
@@ -72,7 +72,7 @@ async function fetchQuestionsFromAPI(category: string, amount: number = 50): Pro
       
       if (response.ok) {
         const data = await response.json();
-        const questions = (data as any).results.map((q: any) => ({
+        const questions = data.results.map((q: any) => ({
           text: q.question.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&"),
           answer: q.correct_answer.toUpperCase().replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&"),
           category: category,

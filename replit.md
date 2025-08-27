@@ -75,18 +75,16 @@ Chaque question propose :
 
 ## Architecture Système
 
-### Frontend (Expo React Native + TypeScript)
-- **Plateforme** : Application mobile native avec Expo
-- **Navigation** : React Navigation avec onglets (Quiz, Classement, Profil, Coins)
-- **UI Components** : React Native Paper pour l'interface native
+### Frontend (React + TypeScript)
+- **Composants** : Interface mobile-first avec navigation par onglets
+- **Pages** : Quiz, Classement, Profil
 - **État** : TanStack Query pour la gestion des données serveur
-- **Icons** : Expo Vector Icons pour les icônes natives
+- **Styling** : TailwindCSS avec composants Shadcn/ui
 
 ### Backend (Express.js + TypeScript)
-- **API REST** : Routes pour questions, sessions, classements (compatible mobile)
+- **API REST** : Routes pour questions, sessions, classements
 - **Validation** : Schémas Zod pour la validation des données
-- **Interface de stockage** : PostgreSQL avec Drizzle ORM
-- **Serveur simplifié** : API standalone sans Vite (adapté pour Expo)
+- **Interface de stockage** : Abstraction permettant de passer du stockage en mémoire à PostgreSQL
 
 ### Fonctionnalités Principales
 
@@ -111,45 +109,6 @@ Chaque question propose :
 - Rang actuel dans les classements
 
 ## Modifications Récentes
-
-**27 Août 2025 (Soir) - Configuration de Déploiement** :
-- **Scripts de build ajoutés** : Configuration TypeScript pour build de production (tsconfig.server.json)
-- **Fichiers de déploiement** : build.sh, start.sh, deploy.js pour automatiser le déploiement
-- **Routes de production** : Version simplifiée sans auth pour déploiement (routes.production.ts)
-- **Serveur production** : index.production.js avec configuration déploiement
-- **Build fonctionnel** : Express server compile vers dist/ avec TypeScript
-- **Déploiement Replit** : Configuration prête pour Replit Deployments
-- **API mobile** : CORS configuré pour clients mobile, endpoints /api/health
-- **Commands de déploiement** : 
-  - Build: `node deploy.js build` ou `./build.sh`
-  - Start: `node deploy.js start` ou `./start.sh`
-  - Deploy: `node deploy.js deploy`
-
-**27 Août 2025 (Soir) - Conversion vers Expo React Native** :
-- **Conversion complète vers application mobile native** : Migration de React/Vite vers Expo React Native
-- **Structure mobile optimisée** : Navigation par onglets avec React Navigation
-- **Composants React Native** : Remplacement des composants HTML/CSS par React Native Paper
-- **Interface adaptée mobile** : QuizScreen, LeaderboardScreen, ProfileScreen, CoinsScreen
-- **Backend API simplifié** : Serveur Express standalone sans dépendance Vite
-- **Assets générés** : Icônes et splash screen créés pour l'application mobile
-- **Configuration Expo** : Metro bundler, TypeScript, babel-preset-expo configurés
-- **Application fonctionnelle** : Serveur Express port 5000, Metro Bundler port 8081
-- **Déploiement mobile** : Application prête pour iOS/Android via Expo Go ou émulateur
-
-## Configuration de Déploiement
-
-### Build et Déploiement
-- **Build Command** : `node deploy.js build`
-- **Run Command** : `node deploy.js start`  
-- **Port** : 5000 (configuré via PORT env var)
-- **Environment** : NODE_ENV=production
-
-### Fichiers de Déploiement
-- `tsconfig.server.json` : Configuration TypeScript pour build
-- `deploy.js` : Script principal de déploiement
-- `server/index.production.ts` : Serveur pour production
-- `server/routes.production.ts` : Routes API simplifiées
-- `build.sh` / `start.sh` : Scripts shell alternatifs
 
 **26 Août 2025 (Nuit) - Authentification Replit Intégrée** :
 - **Système d'authentification Replit complet** : Utilisateurs connectés via OpenID Connect 
@@ -186,8 +145,8 @@ Chaque question propose :
 
 ## Technologies Utilisées
 
-- **Frontend Mobile** : Expo React Native, TypeScript, React Navigation, React Native Paper, TanStack Query
+- **Frontend** : React 18, TypeScript, Vite, TailwindCSS, Shadcn/ui, TanStack Query
 - **Backend** : Express.js, TypeScript, Drizzle ORM
-- **Base de données** : PostgreSQL avec Neon Serverless Database
-- **Mobile** : Expo SDK, Metro Bundler, expo-vector-icons
-- **Development** : Concurrently pour backend + Expo simultanés
+- **Base de données** : PostgreSQL (production), Stockage en mémoire (développement)
+- **Cloud** : Neon Serverless Database
+- **Build** : Vite avec Hot Module Replacement
