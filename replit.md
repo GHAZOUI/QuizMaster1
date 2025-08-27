@@ -120,7 +120,8 @@ Chaque question propose :
 - **Backend API simplifié** : Serveur Express standalone sans dépendance Vite
 - **Assets générés** : Icônes et splash screen créés pour l'application mobile
 - **Configuration Expo** : Metro bundler, TypeScript, babel-preset-expo configurés
-- **Déploiement mobile** : Application prête pour iOS/Android via Expo
+- **Application fonctionnelle** : Serveur Express port 5000, Metro Bundler port 8081
+- **Déploiement mobile** : Application prête pour iOS/Android via Expo Go ou émulateur
 
 **26 Août 2025 (Nuit) - Authentification Replit Intégrée** :
 - **Système d'authentification Replit complet** : Utilisateurs connectés via OpenID Connect 
