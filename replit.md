@@ -110,6 +110,13 @@ Chaque question propose :
 
 ## Modifications Récentes
 
+**27 Août 2025 - Correction Majeure Express v4/v5** :
+- **Problème résolu** : Erreur path-to-regexp causée par conflit de versions Express
+- **Version corrigée** : Rétrogradation d'Express 5.1.0 vers 4.21.2 (comme spécifié dans package.json)
+- **Stratégies d'authentification** : Correction des noms de stratégie avec caractères spéciaux
+- **Système fonctionnel** : Application démarre correctement sur port 5000
+- **Impact** : Résolution complète des erreurs de démarrage et rétablissement de l'authentification
+
 **26 Août 2025 (Nuit) - Authentification Replit Intégrée** :
 - **Système d'authentification Replit complet** : Utilisateurs connectés via OpenID Connect 
 - **Pages dédiées** : Landing page pour visiteurs, interface authentifiée pour utilisateurs connectés
