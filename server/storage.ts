@@ -8,10 +8,10 @@ import {
   type InsertQuizSession,
   type LeaderboardEntry,
   type InsertLeaderboardEntry
-} from "@shared/schema";
+} from "../shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, questions, quizSessions, leaderboardEntries } from "@shared/schema";
+import { users, questions, quizSessions, leaderboardEntries } from "../shared/schema";
 import { eq, and, desc, count, gte, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertQuizSessionSchema, insertLeaderboardEntrySchema } from "@shared/schema";
+import { insertUserSchema, insertQuizSessionSchema, insertLeaderboardEntrySchema } from "../shared/schema";
 import Stripe from "stripe";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 
