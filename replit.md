@@ -112,6 +112,19 @@ Chaque question propose :
 
 ## Modifications Récentes
 
+**27 Août 2025 (Soir) - Configuration de Déploiement** :
+- **Scripts de build ajoutés** : Configuration TypeScript pour build de production (tsconfig.server.json)
+- **Fichiers de déploiement** : build.sh, start.sh, deploy.js pour automatiser le déploiement
+- **Routes de production** : Version simplifiée sans auth pour déploiement (routes.production.ts)
+- **Serveur production** : index.production.js avec configuration déploiement
+- **Build fonctionnel** : Express server compile vers dist/ avec TypeScript
+- **Déploiement Replit** : Configuration prête pour Replit Deployments
+- **API mobile** : CORS configuré pour clients mobile, endpoints /api/health
+- **Commands de déploiement** : 
+  - Build: `node deploy.js build` ou `./build.sh`
+  - Start: `node deploy.js start` ou `./start.sh`
+  - Deploy: `node deploy.js deploy`
+
 **27 Août 2025 (Soir) - Conversion vers Expo React Native** :
 - **Conversion complète vers application mobile native** : Migration de React/Vite vers Expo React Native
 - **Structure mobile optimisée** : Navigation par onglets avec React Navigation
@@ -122,6 +135,21 @@ Chaque question propose :
 - **Configuration Expo** : Metro bundler, TypeScript, babel-preset-expo configurés
 - **Application fonctionnelle** : Serveur Express port 5000, Metro Bundler port 8081
 - **Déploiement mobile** : Application prête pour iOS/Android via Expo Go ou émulateur
+
+## Configuration de Déploiement
+
+### Build et Déploiement
+- **Build Command** : `node deploy.js build`
+- **Run Command** : `node deploy.js start`  
+- **Port** : 5000 (configuré via PORT env var)
+- **Environment** : NODE_ENV=production
+
+### Fichiers de Déploiement
+- `tsconfig.server.json` : Configuration TypeScript pour build
+- `deploy.js` : Script principal de déploiement
+- `server/index.production.ts` : Serveur pour production
+- `server/routes.production.ts` : Routes API simplifiées
+- `build.sh` / `start.sh` : Scripts shell alternatifs
 
 **26 Août 2025 (Nuit) - Authentification Replit Intégrée** :
 - **Système d'authentification Replit complet** : Utilisateurs connectés via OpenID Connect 

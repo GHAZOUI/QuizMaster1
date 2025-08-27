@@ -72,7 +72,7 @@ async function fetchQuestionsFromAPI(category: string, amount: number = 50): Pro
       
       if (response.ok) {
         const data = await response.json();
-        const questions = data.results.map((q: any) => ({
+        const questions = (data as any).results.map((q: any) => ({
           text: q.question.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&"),
           answer: q.correct_answer.toUpperCase().replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&"),
           category: category,
